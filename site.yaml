@@ -12,7 +12,7 @@
         autoremove: yes
         autoclean: yes
 #installs and configures haproxy
-- hosts: haproxy
+- hosts: HAproxy
   become: yes
   become_method: sudo
   tasks:
@@ -69,7 +69,7 @@
     - name: execute the flask-app deployment
       shell: gunicorn -w 2 -D -b 0.0.0.0:8080 app2:app
 
-- hosts: haproxy
+- hosts: HAproxy
   become: yes
   become_method: sudo
   tasks:
