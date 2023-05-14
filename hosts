@@ -1,10 +1,10 @@
 [HAproxy]  
-haproxy   
+HAproxy   
  
 [webservers]  
-deva 
-devb 
-devc 
+devA 
+devB 
+devC 
  
 [all:vars]  
 ansible_user=ubuntu  
