@@ -1,46 +1,21 @@
- hosts: all
-  gather_facts: yes
-  become: yes
-  tasks:
-    - name: Update package cache
-      apt:
-        update_cache: yes
-
-    - name: Upgrade packages
-      apt:
-        upgrade: yes
-        autoremove: yes
-        autoclean: yes
-#installs and configures haproxy
-- hosts: HAproxy
-  become: yes
+---
+- hosts: all
+  become: true
   become_method: sudo
+  gather_facts: yes
   tasks:
-    - name: HAproxy Update
-      apt:
-        update_cache: yes
-
-    - name: Install HAproxy
-      apt:
-        name: haproxy
-        state: latest
-         - name: Configure HAproxy
-      template:
-        src: haproxy.cfg.j2
-        dest: /etc/haproxy/haproxy.cfg.j2
-
-    - name: Restart HAproxy
-      become: yes
-      service:
-        name: haproxy
-        state: restarted
-
-# Deploys and tests the flask app on webservers
+        - name: "Update Cache"
+          apt:
+              update_cache: yes
+        - name: Upgrade packages
+          apt:
+              upgrade: yes
+        #      autoremove: yes
+        # autoclean: yes
 - hosts: webservers
   become: yes
   become_method: sudo
   tasks:
-
     - name: Webservers update
       apt:
         update_cache: yes
@@ -49,32 +24,47 @@
       apt:
         name: python3-pip
         state: latest
-        update_cache: yes
-         - name: flask installation
+
+    - name: Flask installation
       pip:
         name: flask
         state: latest
 
-    - name: install Gunicorn
+    - name: Install Gunicorn
       apt:
         name: gunicorn
 
-    - name: copy the flask app code to the servers
+    - name: Copy the flask app code to the servers
       copy:
-        src:  /$PWD/app2.py
+        src: app2.py
         dest: /home/ubuntu/app2.py
         owner: ubuntu
         mode: '0644'
 
-    - name: execute the flask-app deployment
+    - name: Execute the flask-app deployment
       shell: gunicorn -w 2 -D -b 0.0.0.0:8080 app2:app
 
 - hosts: HAproxy
   become: yes
-  become_method: sudo
+  gather_facts: yes
   tasks:
-    - name: Restart HAproxy
-      become: yes
-      service:
-       name: haproxy
-            state: restarted
+          - name: Update cache
+            apt:
+                   update_cache: yes
+
+          - name: "Installing haproxy"
+            package:
+                    name: haproxy
+                    state: present
+
+
+          - name: "Copying configuration file"
+            template:
+                    src: /$PWD/haproxy.cfg.j2
+                    dest: /etc/haproxy/haproxy.cfg
+
+          - name: "restarting haproxy services"
+            service:
+                    name: haproxy
+                    state: restarted
+            #shell: sudo systemctl restart haproxy.service
