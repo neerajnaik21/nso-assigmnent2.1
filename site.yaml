@@ -4,14 +4,14 @@
   become_method: sudo
   gather_facts: yes
   tasks:
-        - name: "Update Cache"
-          apt:
-              update_cache: yes
-        - name: Upgrade packages
-          apt:
-              upgrade: yes
-        #      autoremove: yes
-        # autoclean: yes
+    - name: Update Cache
+      apt:  
+        update_cache: yes
+        
+    - name: Upgrade packages
+      apt:
+        upgrade: yes
+    
 - hosts: webservers
   become: yes
   become_method: sudo
@@ -36,35 +36,36 @@
 
     - name: Copy the flask app code to the servers
       copy:
-        src: app2.py
+        src: application2.py
         dest: /home/ubuntu/app2.py
         owner: ubuntu
         mode: '0644'
 
     - name: Execute the flask-app deployment
-      shell: gunicorn -w 2 -D -b 0.0.0.0:8080 app2:app
+      shell: gunicorn -w 2 -D -b 0.0.0.0:7000 app2:app
 
 - hosts: HAproxy
   become: yes
+  become_method: sudo
   gather_facts: yes
   tasks:
-          - name: Update cache
-            apt:
-                   update_cache: yes
+    - name: Update cache
+      apt:
+        update_cache: yes
 
-          - name: "Installing haproxy"
-            package:
-                    name: haproxy
-                    state: present
+    - name: "Installing haproxy"
+      apt:
+        name: haproxy
+        state: present
 
+    - name: "Copying configuration file"
+      template:
+        src: /$PWD/haproxy.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
 
-          - name: "Copying configuration file"
-            template:
-                    src: /$PWD/haproxy.cfg.j2
-                    dest: /etc/haproxy/haproxy.cfg
-
-          - name: "restarting haproxy services"
-            service:
-                    name: haproxy
-                    state: restarted
-            #shell: sudo systemctl restart haproxy.service
+    - name: "restarting haproxy services"
+      service:
+        name: haproxy
+        state: restarted
+        enabled: yes
+       #shell: sudo systemctl restart haproxy.service
